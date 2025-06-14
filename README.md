@@ -101,9 +101,9 @@ renewable-chatbot/
 ## 🌿 Live Demo
 
 You can explore the interactive chatbot and dashboard here:  
-👉 [Renewable Awareness Chatbot + Dashboard](https://SaiMeghana14.github.io/renewable-awareness-chatbot/)
-
-<img src="https://yourdomain.com/chatbot-preview.gif" alt="Chatbot + Dashboard Preview" width="600"/>
+👉 [Renewable Awareness Chatbot + Dashboard][<a href="https://saimeghana14.github.io/renewable-awareness-chatbot/" target="_blank">]
+  <img src="https://img.shields.io/badge/Launch%20Chatbot-Streamlit-green?style=for-the-badge" alt="Launch Chatbot">
+</a>
 
 
 ## 📌 Dataset Preview
