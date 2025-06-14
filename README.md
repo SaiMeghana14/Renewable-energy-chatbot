@@ -1,7 +1,8 @@
 
-# 🌿 Renewable Energy Awareness Chatbot
+# 🌿 Renewable Energy Awareness Chatbot  🌍
 
 An interactive, AI-powered chatbot built using **Streamlit** to promote awareness about renewable energy sources — such as solar, wind, hydro, geothermal, and biomass. Created as part of the **1M1B Green Internship** initiative to support climate education and responsible energy choices.
+ Renewable Energy Awareness Chatbot + Insights
 
 ---
 
@@ -13,6 +14,15 @@ An interactive, AI-powered chatbot built using **Streamlit** to promote awarenes
 - 💻 Easy to deploy and use in any browser (via Streamlit Cloud)
 - 📱 Lightweight interface suitable for public use or educational portals
 
+## 🚀 Key Aspects
+
+- Chatbot Q&A (Streamlit UI)
+- Pie charts for country-wise renewable mix
+- Time-series trend analysis
+- GDP & population correlation with energy use
+- Downloadable CSVs
+- Region-based grouping
+- Country comparison table
 ---
 
 ## 🔧 Tech Stack
@@ -44,6 +54,7 @@ cd renewable-chatbot
 ### ▶️ Run Locally
 
 ```bash
+pip install -r requirements.txt
 streamlit run app.py
 ```
 
@@ -66,9 +77,10 @@ Then open your browser to: `http://localhost:8501`
 ```
 renewable-chatbot/
 │
-├── app.py                # Main chatbot code
-├── requirements.txt      # Python dependencies
-└── README.md             # This file
+├── app.py                  # Main chatbot code
+├── requirements.txt        # Python dependencies
+├── renewables_enhanced.csv # dataset with renewables data
+└── README.md               # This file
 ```
 
 ---
@@ -85,6 +97,19 @@ renewable-chatbot/
 
 (https://public.tableau.com/shared/TBCFKTP8G?:display_count=n&:origin=viz_share_link)
 ---
+
+Embed via iframe like:
+
+```html
+<iframe src="https://public.tableau.com/views/YourDashboard" width="100%" height="500"></iframe>
+```
+
+## 📌 Dataset Preview
+
+| Country     | Year | Solar_GW | Wind_GW | Hydro_GW | Biomass_GW | Geothermal_GW | Population_M | GDP_Billion_USD |
+|-------------|------|----------|---------|----------|-------------|----------------|----------------|------------------|
+| India       | 2023 | 55       | 40      | 50       | 10          | 0.5            | 1400           | 3200             |
+
 
 ## 📣 Credits
 
