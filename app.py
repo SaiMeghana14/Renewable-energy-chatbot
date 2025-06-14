@@ -1,7 +1,7 @@
-
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 st.set_page_config(page_title="Renewable Awareness Chatbot", layout="wide")
 st.title("🌿 Renewable Energy Awareness Chatbot + Insights")
@@ -20,93 +20,102 @@ def load_data():
 
 df = load_data()
 
-# --- 🔍 Search Bar ---
-search_query = st.text_input("Search for a Country:")
-if search_query:
-    filtered_df = df[df['Country'].str.contains(search_query, case=False)]
-    if not filtered_df.empty:
-        st.write(f"### Results for '{search_query}'")
-        st.dataframe(filtered_df)
-    else:
-        st.warning("No matching country found.")
+# Tabs for cleaner navigation
+tabs = st.tabs(["🌍 Country Insights", "🔎 Energy Info", "📈 Comparison & Trends"])
 
-# Sidebar selection
-country = st.sidebar.selectbox("Select a Country", sorted(df["Country"].unique()))
-year = st.sidebar.selectbox("Select a Year", sorted(df["Year"].unique(), reverse=True))
+with tabs[0]:
+    # --- 🔍 Search Bar for Country ---
+    search_query = st.text_input("Search for a Country:")
+    if search_query:
+        filtered_df = df[df['Country'].str.contains(search_query, case=False)]
+        if not filtered_df.empty:
+            st.write(f"### Results for '{search_query}'")
+            st.dataframe(filtered_df)
+        else:
+            st.warning("No matching country found.")
 
-# Filter data
-data = df[(df["Country"] == country) & (df["Year"] == year)]
+    country = st.selectbox("Select a Country", sorted(df["Country"].unique()))
+    year = st.selectbox("Select a Year", sorted(df["Year"].unique(), reverse=True))
+    data = df[(df["Country"] == country) & (df["Year"] == year)]
 
-if not data.empty:
-    st.subheader(f"🔍 Overview for {country} ({year})")
+    if not data.empty:
+        st.subheader(f"🔍 Overview for {country} ({year})")
+        energy_sources = ["Solar_GW", "Wind_GW", "Hydro_GW", "Biomass_GW", "Geothermal_GW"]
+        sizes = data[energy_sources].values.flatten()
+        labels = ["Solar", "Wind", "Hydro", "Biomass", "Geothermal"]
 
-    # Pie Chart for Renewable Mix
-    energy_sources = ["Solar_GW", "Wind_GW", "Hydro_GW", "Biomass_GW", "Geothermal_GW"]
-    sizes = data[energy_sources].values.flatten()
-    labels = ["Solar", "Wind", "Hydro", "Biomass", "Geothermal"]
+        fig, ax = plt.subplots()
+        ax.pie(sizes, labels=labels, autopct="%1.1f%%", startangle=140)
+        ax.axis("equal")
+        st.pyplot(fig)
 
-    fig, ax = plt.subplots()
-    ax.pie(sizes, labels=labels, autopct="%1.1f%%", startangle=140)
-    ax.axis("equal")
-    st.pyplot(fig)
+        st.metric("Population (Millions)", data["Population_M"].values[0])
+        st.metric("GDP (Billion USD)", data["GDP_Billion_USD"].values[0])
+        st.metric("Total Renewable Capacity (GW)", round(data["Total_GW"].values[0], 2))
 
-    # Key Metrics
-    st.metric("Population (Millions)", data["Population_M"].values[0])
-    st.metric("GDP (Billion USD)", data["GDP_Billion_USD"].values[0])
-    st.metric("Total Renewable Capacity (GW)", round(data["Total_GW"].values[0], 2))
+with tabs[1]:
+    st.markdown("### Learn About Renewable Energy Sources")
+    energy_topic = st.text_input("Search about a renewable energy type (e.g., Solar, Wind, Biomass):")
+    if energy_topic:
+        energy_topic = energy_topic.lower()
+        if "solar" in energy_topic:
+            st.info("☀️ **Solar Energy**: Converts sunlight into electricity using photovoltaic cells.")
+        elif "wind" in energy_topic:
+            st.info("💨 **Wind Energy**: Wind turbines harness the kinetic energy of wind to generate electricity.")
+        elif "hydro" in energy_topic:
+            st.info("💧 **Hydropower**: Uses flowing water to turn turbines for electricity.")
+        elif "biomass" in energy_topic:
+            st.info("🌾 **Biomass**: Organic material like wood and crops converted to energy.")
+        elif "geothermal" in energy_topic:
+            st.info("🌋 **Geothermal Energy**: Extracts underground heat to produce power.")
+        else:
+            st.warning("Please enter a valid type: Solar, Wind, Hydro, Biomass, Geothermal.")
 
-# Trend over years
-st.subheader("📈 Renewable Growth Over Years")
-trend_df = df[df["Country"] == country].sort_values("Year")
-plt.figure(figsize=(10, 4))
-plt.plot(trend_df["Year"], trend_df["Solar_GW"], label="Solar")
-plt.plot(trend_df["Year"], trend_df["Wind_GW"], label="Wind")
-plt.plot(trend_df["Year"], trend_df["Hydro_GW"], label="Hydro")
-plt.legend()
-plt.xlabel("Year")
-plt.ylabel("Capacity (GW)")
-plt.title(f"{country} Renewable Growth Over Time")
-st.pyplot(plt)
+with tabs[2]:
+    st.subheader("📈 Renewable Growth Over Years")
+    trend_df = df[df["Country"] == country].sort_values("Year")
+    plt.figure(figsize=(10, 4))
+    plt.plot(trend_df["Year"], trend_df["Solar_GW"], label="Solar")
+    plt.plot(trend_df["Year"], trend_df["Wind_GW"], label="Wind")
+    plt.plot(trend_df["Year"], trend_df["Hydro_GW"], label="Hydro")
+    plt.legend()
+    plt.xlabel("Year")
+    plt.ylabel("Capacity (GW)")
+    plt.title(f"{country} Renewable Growth Over Time")
+    st.pyplot(plt)
 
-# Comparison Tool
-st.subheader("🔄 Country Comparison")
-col1, col2 = st.columns(2)
-with col1:
-    country1 = st.selectbox("Country 1", df["Country"].unique(), index=0)
-with col2:
-    country2 = st.selectbox("Country 2", df["Country"].unique(), index=1)
+    st.subheader("🔄 Country Comparison")
+    col1, col2 = st.columns(2)
+    with col1:
+        country1 = st.selectbox("Country 1", df["Country"].unique(), index=0, key="country1")
+    with col2:
+        country2 = st.selectbox("Country 2", df["Country"].unique(), index=1, key="country2")
 
-d1 = df[(df["Country"] == country1) & (df["Year"] == year)].iloc[0]
-d2 = df[(df["Country"] == country2) & (df["Year"] == year)].iloc[0]
+    d1 = df[(df["Country"] == country1) & (df["Year"] == year)].iloc[0]
+    d2 = df[(df["Country"] == country2) & (df["Year"] == year)].iloc[0]
 
-comparison_df = pd.DataFrame({
-    "Source": labels,
-    country1: d1[energy_sources].values,
-    country2: d2[energy_sources].values
-})
-st.dataframe(comparison_df)
+    comparison_df = pd.DataFrame({
+        "Source": labels,
+        country1: d1[energy_sources].values,
+        country2: d2[energy_sources].values
+    })
+    st.dataframe(comparison_df)
 
-# --- 💰 GDP vs Green Investment (Simulated field) ---
-df["Green_Investment_BillionUSD"] = df["Total_GW"] * 0.1  # Dummy logic
-st.subheader("💰 GDP vs Green Investment")
-fig2, ax2 = plt.subplots(figsize=(10, 6))
-sns.scatterplot(data=df, x="GDP_Billion_USD", y="Green_Investment_BillionUSD", hue="Country", ax=ax2)
-ax2.set_xlabel("GDP (Billion USD)")
-ax2.set_ylabel("Green Investment (Billion USD)")
-ax2.set_title("Green Investment vs GDP")
-st.pyplot(fig2)
+    df["Green_Investment_BillionUSD"] = df["Total_GW"] * 0.1
+    st.subheader("💰 GDP vs Green Investment")
+    fig2, ax2 = plt.subplots(figsize=(10, 6))
+    sns.scatterplot(data=df, x="GDP_Billion_USD", y="Green_Investment_BillionUSD", hue="Country", ax=ax2)
+    ax2.set_xlabel("GDP (Billion USD)")
+    ax2.set_ylabel("Green Investment (Billion USD)")
+    ax2.set_title("Green Investment vs GDP")
+    st.pyplot(fig2)
 
-# Correlation Plot
-st.subheader("📊 Correlation: GDP vs Total Renewable Energy")
-st.scatter_chart(df[["GDP_Billion_USD", "Total_GW"]])
+    st.subheader("🌍 Region-Wise Renewable Averages")
+    region_df = df[df["Year"] == year].groupby("Region")[energy_sources + ["Total_GW"]].mean()
+    st.bar_chart(region_df["Total_GW"])
 
-# Region-wise aggregation
-st.subheader("🌍 Region-Wise Renewable Averages")
-region_df = df[df["Year"] == year].groupby("Region")[energy_sources + ["Total_GW"]].mean()
-st.bar_chart(region_df["Total_GW"])
+    st.download_button("📥 Download This Year’s Data", df[df["Year"] == year].to_csv(index=False), "yearly_renewables.csv", "text/csv")
 
-# Download
-st.download_button("📥 Download This Year’s Data", df[df["Year"] == year].to_csv(index=False), "yearly_renewables.csv", "text/csv")
-
-# Closing
-st.info("💡 Try interacting with the sidebar to explore more insights by year and country!")
+# Footer
+st.markdown("---")
+st.info("💡 Use the tabs to explore renewable trends, compare countries, and learn more about energy types.")
