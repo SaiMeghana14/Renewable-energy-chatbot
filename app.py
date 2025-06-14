@@ -20,6 +20,16 @@ def load_data():
 
 df = load_data()
 
+# --- 🔍 Search Bar ---
+search_query = st.text_input("Search for a Country:")
+if search_query:
+    filtered_df = df[df['Country'].str.contains(search_query, case=False)]
+    if not filtered_df.empty:
+        st.write(f"### Results for '{search_query}'")
+        st.dataframe(filtered_df)
+    else:
+        st.warning("No matching country found.")
+
 # Sidebar selection
 country = st.sidebar.selectbox("Select a Country", sorted(df["Country"].unique()))
 year = st.sidebar.selectbox("Select a Year", sorted(df["Year"].unique(), reverse=True))
@@ -75,6 +85,16 @@ comparison_df = pd.DataFrame({
     country2: d2[energy_sources].values
 })
 st.dataframe(comparison_df)
+
+# --- 💰 GDP vs Green Investment (Simulated field) ---
+df["Green_Investment_BillionUSD"] = df["Total_GW"] * 0.1  # Dummy logic
+st.subheader("💰 GDP vs Green Investment")
+fig2, ax2 = plt.subplots(figsize=(10, 6))
+sns.scatterplot(data=df, x="GDP_Billion_USD", y="Green_Investment_BillionUSD", hue="Country", ax=ax2)
+ax2.set_xlabel("GDP (Billion USD)")
+ax2.set_ylabel("Green Investment (Billion USD)")
+ax2.set_title("Green Investment vs GDP")
+st.pyplot(fig2)
 
 # Correlation Plot
 st.subheader("📊 Correlation: GDP vs Total Renewable Energy")
