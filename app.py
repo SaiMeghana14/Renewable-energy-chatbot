@@ -2,9 +2,13 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from gtts import gTTS
+import os
+from io import BytesIO
+import base64
 
 st.set_page_config(page_title="Renewable Awareness Chatbot", layout="wide")
-st.title("🌿 Renewable Energy Awareness Chatbot + Insights")
+st.title("🌱 Renewable Awareness Chatbot + Insights")
 
 # Load data
 @st.cache_data
@@ -20,102 +24,69 @@ def load_data():
 
 df = load_data()
 
-# Tabs for cleaner navigation
-tabs = st.tabs(["🌍 Country Insights", "🔎 Energy Info", "📈 Comparison & Trends"])
+# Sidebar for selecting country and year
+country = st.sidebar.selectbox("Select Country", sorted(df["Country"].unique()))
+year = st.sidebar.selectbox("Select Year", sorted(df["Year"].unique(), reverse=True))
 
-with tabs[0]:
-    # --- 🔍 Search Bar for Country ---
-    search_query = st.text_input("Search for a Country:")
-    if search_query:
-        filtered_df = df[df['Country'].str.contains(search_query, case=False)]
-        if not filtered_df.empty:
-            st.write(f"### Results for '{search_query}'")
-            st.dataframe(filtered_df)
-        else:
-            st.warning("No matching country found.")
+# Get specific row
+data = df[(df["Country"] == country) & (df["Year"] == year)].iloc[0]
 
-    country = st.selectbox("Select a Country", sorted(df["Country"].unique()))
-    year = st.selectbox("Select a Year", sorted(df["Year"].unique(), reverse=True))
-    data = df[(df["Country"] == country) & (df["Year"] == year)]
+# Quick FAQ buttons
+st.subheader("💡 Quick Questions")
+faq = st.radio("Pick a question:", [
+    f"What is the top renewable source in {country}?",
+    f"Compare Wind and Solar in {country}",
+    f"Show renewable mix for {country} in {year}"
+])
 
-    if not data.empty:
-        st.subheader(f"🔍 Overview for {country} ({year})")
-        energy_sources = ["Solar_GW", "Wind_GW", "Hydro_GW", "Biomass_GW", "Geothermal_GW"]
-        sizes = data[energy_sources].values.flatten()
-        labels = ["Solar", "Wind", "Hydro", "Biomass", "Geothermal"]
+# Generate a response for FAQ
+def faq_response(faq):
+    if "top renewable" in faq:
+        max_source = data[["Solar_GW", "Wind_GW", "Hydro_GW", "Biomass_GW", "Geothermal_GW"]].idxmax()
+        source_name = max_source.replace("_GW", "")
+        value = data[max_source]
+        return f"In {country}, the top renewable source is {source_name} with {value} GW capacity."
+    elif "Compare Wind and Solar" in faq:
+        return f"In {country}, Solar: {data['Solar_GW']} GW | Wind: {data['Wind_GW']} GW."
+    elif "renewable mix" in faq:
+        mix = ", ".join([f"{k.replace('_GW','')}: {v} GW" for k, v in data.items() if k.endswith("_GW")])
+        return f"Here is the renewable mix for {country} in {year} → {mix}"
 
-        fig, ax = plt.subplots()
-        ax.pie(sizes, labels=labels, autopct="%1.1f%%", startangle=140)
-        ax.axis("equal")
-        st.pyplot(fig)
+st.info(faq_response(faq))
 
-        st.metric("Population (Millions)", data["Population_M"].values[0])
-        st.metric("GDP (Billion USD)", data["GDP_Billion_USD"].values[0])
-        st.metric("Total Renewable Capacity (GW)", round(data["Total_GW"].values[0], 2))
+# 🧠 Natural Language Chatbot Interface
+st.subheader("🧠 Ask Your Own Question")
+user_query = st.text_input("Type a question about renewable energy:")
 
-with tabs[1]:
-    st.markdown("### Learn About Renewable Energy Sources")
-    energy_topic = st.text_input("Search about a renewable energy type (e.g., Solar, Wind, Biomass):")
-    if energy_topic:
-        energy_topic = energy_topic.lower()
-        if "solar" in energy_topic:
-            st.info("☀️ **Solar Energy**: Converts sunlight into electricity using photovoltaic cells.")
-        elif "wind" in energy_topic:
-            st.info("💨 **Wind Energy**: Wind turbines harness the kinetic energy of wind to generate electricity.")
-        elif "hydro" in energy_topic:
-            st.info("💧 **Hydropower**: Uses flowing water to turn turbines for electricity.")
-        elif "biomass" in energy_topic:
-            st.info("🌾 **Biomass**: Organic material like wood and crops converted to energy.")
-        elif "geothermal" in energy_topic:
-            st.info("🌋 **Geothermal Energy**: Extracts underground heat to produce power.")
-        else:
-            st.warning("Please enter a valid type: Solar, Wind, Hydro, Biomass, Geothermal.")
+def answer_query(query):
+    query = query.lower()
+    if country.lower() in query:
+        if "solar" in query:
+            return f"{country} has {data['Solar_GW']} GW of solar capacity in {year}."
+        elif "wind" in query:
+            return f"{country} has {data['Wind_GW']} GW of wind capacity in {year}."
+        elif "hydro" in query:
+            return f"{country} has {data['Hydro_GW']} GW of hydropower in {year}."
+        elif "biomass" in query:
+            return f"{country} has {data['Biomass_GW']} GW of biomass capacity."
+        elif "geothermal" in query:
+            return f"{country} has {data['Geothermal_GW']} GW of geothermal capacity."
+        elif "total" in query or "overall" in query:
+            return f"{country}'s total renewable capacity is {data['Total_GW']} GW."
+    return "🤖 I'm still learning. Try asking about solar, wind, hydro, biomass, or geothermal."
 
-with tabs[2]:
-    st.subheader("📈 Renewable Growth Over Years")
-    trend_df = df[df["Country"] == country].sort_values("Year")
-    plt.figure(figsize=(10, 4))
-    plt.plot(trend_df["Year"], trend_df["Solar_GW"], label="Solar")
-    plt.plot(trend_df["Year"], trend_df["Wind_GW"], label="Wind")
-    plt.plot(trend_df["Year"], trend_df["Hydro_GW"], label="Hydro")
-    plt.legend()
-    plt.xlabel("Year")
-    plt.ylabel("Capacity (GW)")
-    plt.title(f"{country} Renewable Growth Over Time")
-    st.pyplot(plt)
+if user_query:
+    response = answer_query(user_query)
+    st.success(response)
 
-    st.subheader("🔄 Country Comparison")
-    col1, col2 = st.columns(2)
-    with col1:
-        country1 = st.selectbox("Country 1", df["Country"].unique(), index=0, key="country1")
-    with col2:
-        country2 = st.selectbox("Country 2", df["Country"].unique(), index=1, key="country2")
-
-    d1 = df[(df["Country"] == country1) & (df["Year"] == year)].iloc[0]
-    d2 = df[(df["Country"] == country2) & (df["Year"] == year)].iloc[0]
-
-    comparison_df = pd.DataFrame({
-        "Source": labels,
-        country1: d1[energy_sources].values,
-        country2: d2[energy_sources].values
-    })
-    st.dataframe(comparison_df)
-
-    df["Green_Investment_BillionUSD"] = df["Total_GW"] * 0.1
-    st.subheader("💰 GDP vs Green Investment")
-    fig2, ax2 = plt.subplots(figsize=(10, 6))
-    sns.scatterplot(data=df, x="GDP_Billion_USD", y="Green_Investment_BillionUSD", hue="Country", ax=ax2)
-    ax2.set_xlabel("GDP (Billion USD)")
-    ax2.set_ylabel("Green Investment (Billion USD)")
-    ax2.set_title("Green Investment vs GDP")
-    st.pyplot(fig2)
-
-    st.subheader("🌍 Region-Wise Renewable Averages")
-    region_df = df[df["Year"] == year].groupby("Region")[energy_sources + ["Total_GW"]].mean()
-    st.bar_chart(region_df["Total_GW"])
-
-    st.download_button("📥 Download This Year’s Data", df[df["Year"] == year].to_csv(index=False), "yearly_renewables.csv", "text/csv")
+    # Optional Text-to-Speech
+    tts = gTTS(text=response, lang='en')
+    mp3_fp = BytesIO()
+    tts.write_to_fp(mp3_fp)
+    mp3_fp.seek(0)
+    b64 = base64.b64encode(mp3_fp.read()).decode()
+    st.audio(f"data:audio/mp3;base64,{b64}", format="audio/mp3")
 
 # Footer
 st.markdown("---")
-st.info("💡 Use the tabs to explore renewable trends, compare countries, and learn more about energy types.")
+st.info("This chatbot is part of the 1M1B Green Internship project. Type a question or choose from the FAQ!")
