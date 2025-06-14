@@ -85,6 +85,7 @@ renewable-chatbot/
 
 ---
 
+
 ## 📷 Preview
 
 ![chatbot-preview](https://github.com/user-attachments/assets/e9f6f114-6834-41a0-9925-ae163aabfdcb)
@@ -102,7 +103,7 @@ renewable-chatbot/
 
 You can explore the interactive chatbot and dashboard here:  
 👉 [Renewable Awareness Chatbot + Dashboard]
-🚀 [Launch the Renewable Chatbot](https://saimeghana14.github.io/renewable-awareness-chatbot/)
+[🚀 Launch the Renewable Chatbot](https://renewable-energy-chatbot-jbytnwlyj6plzarg82s4ez.streamlit.app)
 
 
 ## 📌 Dataset Preview
