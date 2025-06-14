@@ -98,11 +98,13 @@ renewable-chatbot/
 (https://public.tableau.com/shared/TBCFKTP8G?:display_count=n&:origin=viz_share_link)
 ---
 
-Embed via iframe like:
+## 🌿 Live Demo
 
-```html
-<iframe src="https://public.tableau.com/views/YourDashboard" width="100%" height="500"></iframe>
-```
+You can explore the interactive chatbot and dashboard here:  
+👉 [Renewable Awareness Chatbot + Dashboard](https://SaiMeghana14.github.io/renewable-awareness-chatbot/)
+
+<img src="https://yourdomain.com/chatbot-preview.gif" alt="Chatbot + Dashboard Preview" width="600"/>
+
 
 ## 📌 Dataset Preview
 
