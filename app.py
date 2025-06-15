@@ -11,7 +11,7 @@ st.title("🌿 Renewable Awareness Chatbot + Dashboard")
 
 @st.cache_data
 def load_data():
-    df = pd.read_csv("renewables_enhanced.csv")
+    df = pd.read_csv("renewables_enhanced_augmented.csv")
     df["Total_GW"] = df[["Solar_GW", "Wind_GW", "Hydro_GW", "Biomass_GW", "Geothermal_GW"]].sum(axis=1)
     df["Region"] = df["Country"].map({
         "India": "Asia", "China": "Asia", "USA": "North America", "Germany": "Europe",
@@ -46,6 +46,8 @@ with tab1:
 
     st.subheader("📈 Renewable Trends")
     trend_df = df[df["Country"] == country].sort_values("Year")
+
+if len(trend_df) > 1:
     plt.figure(figsize=(10, 4))
     plt.plot(trend_df["Year"], trend_df["Solar_GW"], label="Solar")
     plt.plot(trend_df["Year"], trend_df["Wind_GW"], label="Wind")
@@ -55,6 +57,8 @@ with tab1:
     plt.ylabel("Capacity (GW)")
     plt.title(f"{country} Renewable Growth Over Time")
     st.pyplot(plt)
+else:
+    st.warning("📉 Not enough yearly data to show trend for this country.")
 
     st.subheader("🔄 Country Comparison")
     col1, col2 = st.columns(2)
