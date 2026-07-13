@@ -132,6 +132,9 @@ def load():
 
 df=load()
 
+st.write(df["Year"].unique())
+st.write(sorted(df["Year"].unique(), reverse=True))
+
 flags={
 "India":"🇮🇳 India","USA":"🇺🇸 USA","China":"🇨🇳 China","Germany":"🇩🇪 Germany",
 "Brazil":"🇧🇷 Brazil","Australia":"🇦🇺 Australia","UK":"🇬🇧 UK",
@@ -910,10 +913,6 @@ elif page == "📄 Report":
 - 💧 Hydro: {row['Hydro_GW']:.1f} GW
 - 🌿 Biomass: {row['Biomass_GW']:.1f} GW
 - 🌋 Geothermal: {row['Geothermal_GW']:.1f} GW
-
-### AI Recommendation
-
-Continue investing in renewable energy infrastructure, especially solar and wind technologies, to reduce carbon emissions and improve long-term energy sustainability.
 
 ### Environmental Benefits
 
