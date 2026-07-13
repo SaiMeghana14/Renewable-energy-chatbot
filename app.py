@@ -132,9 +132,6 @@ def load():
 
 df=load()
 
-st.write(df["Year"].unique())
-st.write(sorted(df["Year"].unique(), reverse=True))
-
 flags={
 "India":"🇮🇳 India","USA":"🇺🇸 USA","China":"🇨🇳 China","Germany":"🇩🇪 Germany",
 "Brazil":"🇧🇷 Brazil","Australia":"🇦🇺 Australia","UK":"🇬🇧 UK",
@@ -153,9 +150,10 @@ country = st.sidebar.selectbox(
     format_func=lambda x: flags[x]
 )
 
-year = st.sidebar.selectbox(
+year = st.sidebar.select_slider(
     "📅 Select Year",
-    sorted(df["Year"].unique(), reverse=True)
+    options=sorted(df["Year"].unique()),
+    value=max(df["Year"].unique())
 )
 
 filtered = df[
@@ -343,9 +341,88 @@ if page=="🏠 Dashboard":
 
 elif page == "💬 AI Chatbot":
 
-    st.title("💬 Renewable Energy Assistant")
-    st.write(f"Currently viewing: **{country} ({year})**")
+    st.markdown(f"""
+    <div style="
+    background:linear-gradient(135deg,#2E7D32,#43A047,#66BB6A);
+    padding:30px;
+    border-radius:20px;
+    color:white;
+    ">
+    
+    <h1>🤖 Renewable Energy Assistant</h1>
+    
+    <h4>Your AI Guide for Clean & Sustainable Energy</h4>
+    
+    <p>
+    Currently viewing:
+    <b>{country}</b> |
+    <b>{year}</b>
+    </p>
+    
+    </div>
+    """, unsafe_allow_html=True)
 
+    st.markdown("## ⚡ Quick Questions")
+
+    c1,c2,c3 = st.columns(3)
+    
+    with c1:
+        if st.button("☀️ Solar Capacity"):
+            st.session_state.quick_question = "solar"
+    
+    with c2:
+        if st.button("💨 Wind Capacity"):
+            st.session_state.quick_question = "wind"
+    
+    with c3:
+        if st.button("⚡ Total Capacity"):
+            st.session_state.quick_question = "total"
+
+    st.markdown("## 🌿 What can I help you with?")
+
+    col1,col2,col3 = st.columns(3)
+    
+    with col1:
+        st.info("""
+    ☀️ **Renewable Sources**
+    
+    Solar
+    
+    Wind
+    
+    Hydro
+    
+    Biomass
+    
+    Geothermal
+    """)
+    
+    with col2:
+        st.success("""
+    📊 **Country Statistics**
+    
+    Renewable Capacity
+    
+    GDP
+    
+    Population
+    
+    Growth Trends
+    """)
+    
+    with col3:
+        st.warning("""
+    💡 **Energy Tips**
+    
+    Save Electricity
+    
+    Green Habits
+    
+    Climate Facts
+    
+    Sustainability
+    """)
+        
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
