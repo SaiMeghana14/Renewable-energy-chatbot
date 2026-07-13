@@ -379,25 +379,25 @@ elif page == "💬 AI Chatbot":
                 f"of installed solar capacity in **{year}**."
             )
 
-        elif any(word in query for word in ["wind", "turbine"])::
+        elif any(word in query for word in ["wind", "turbine"]):
             ans = (
                 f"💨 **{country}** currently has **{row['Wind_GW']:.1f} GW** "
                 f"of installed wind capacity in **{year}**."
             )
 
-        elif any(word in query for word in ["hydro", "water", "dam"])::
+        elif any(word in query for word in ["hydro", "water", "dam"]):
             ans = (
                 f"💧 **{country}** currently has **{row['Hydro_GW']:.1f} GW** "
                 f"of hydropower capacity in **{year}**."
             )
 
-        elif any(word in query for word in ["biomass", "organic"])::
+        elif any(word in query for word in ["biomass", "organic"]):
             ans = (
                 f"🌿 **{country}** currently has **{row['Biomass_GW']:.1f} GW** "
                 f"of biomass energy capacity in **{year}**."
             )
 
-        elif any(word in query for word in ["geothermal", "earth", "heat"])::
+        elif any(word in query for word in ["geothermal", "earth", "heat"]):
             ans = (
                 f"🌋 **{country}** currently has **{row['Geothermal_GW']:.1f} GW** "
                 f"of geothermal energy capacity in **{year}**."
