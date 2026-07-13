@@ -169,6 +169,35 @@ if filtered.empty:
 
 row = filtered.iloc[0]
 
+# =====================================
+# Climate Impact Calculations
+# =====================================
+
+co2 = row["Total_GW"] * 1200          # Estimated CO₂ saved (tons/year)
+trees = int(co2 / 21)                 # Equivalent trees
+homes = int(row["Total_GW"] * 500000) # Homes powered
+cars = int(co2 / 4600)                # Cars removed
+
+# =====================================
+# AI Recommendation
+# =====================================
+
+if row["Solar_GW"] > row["Wind_GW"]:
+    recommendation = (
+        "Expand solar farms and rooftop solar installations "
+        "to maximize clean energy generation."
+    )
+
+elif row["Wind_GW"] > row["Solar_GW"]:
+    recommendation = (
+        "Increase investments in wind farms and modern turbine technology."
+    )
+
+else:
+    recommendation = (
+        "Maintain a balanced renewable energy portfolio across all sources."
+    )
+
 # ==========================================
 # 🏠 DASHBOARD
 # ==========================================
@@ -260,14 +289,6 @@ if page=="🏠 Dashboard":
 
     growth=(trend.iloc[-1].Solar_GW-trend.iloc[0].Solar_GW)/trend.iloc[0].Solar_GW*100
     
-    renewables=row.Total_GW
-    if renewables>500:
-        recommendation="The country is a global renewable energy leader."
-    elif renewables>150:
-        recommendation="Continue expanding wind and solar capacity."
-    else:
-        recommendation="Increase investment in renewable infrastructure."
-    
     st.markdown(f"""
     <div class="ai-box">
     
@@ -352,31 +373,31 @@ elif page == "💬 AI Chatbot":
 
         # AI Responses
 
-        if "solar" in query:
+        if any(word in query for word in ["solar", "sun", "photovoltaic"]):
             ans = (
                 f"☀️ **{country}** currently has **{row['Solar_GW']:.1f} GW** "
                 f"of installed solar capacity in **{year}**."
             )
 
-        elif "wind" in query:
+        elif any(word in query for word in ["wind", "turbine"])::
             ans = (
                 f"💨 **{country}** currently has **{row['Wind_GW']:.1f} GW** "
                 f"of installed wind capacity in **{year}**."
             )
 
-        elif "hydro" in query:
+        elif any(word in query for word in ["hydro", "water", "dam"])::
             ans = (
                 f"💧 **{country}** currently has **{row['Hydro_GW']:.1f} GW** "
                 f"of hydropower capacity in **{year}**."
             )
 
-        elif "biomass" in query:
+        elif any(word in query for word in ["biomass", "organic"])::
             ans = (
                 f"🌿 **{country}** currently has **{row['Biomass_GW']:.1f} GW** "
                 f"of biomass energy capacity in **{year}**."
             )
 
-        elif "geothermal" in query:
+        elif any(word in query for word in ["geothermal", "earth", "heat"])::
             ans = (
                 f"🌋 **{country}** currently has **{row['Geothermal_GW']:.1f} GW** "
                 f"of geothermal energy capacity in **{year}**."
@@ -604,6 +625,123 @@ elif page=="📚 Learn":
 """)
 
 # ==========================================
+# 🌍 COMPARE COUNTRIES
+# ==========================================
+
+elif page == "🌍 Compare":
+
+    st.title("🌍 Compare Renewable Energy")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        country1 = st.selectbox(
+            "Country 1",
+            df["Country"].unique(),
+            key="compare1"
+        )
+
+    with col2:
+        country2 = st.selectbox(
+            "Country 2",
+            df["Country"].unique(),
+            index=1,
+            key="compare2"
+        )
+
+    d1 = df[
+        (df["Country"] == country1) &
+        (df["Year"] == year)
+    ].iloc[0]
+
+    d2 = df[
+        (df["Country"] == country2) &
+        (df["Year"] == year)
+    ].iloc[0]
+
+    compare = px.bar(
+
+        x=[
+            "Solar",
+            "Wind",
+            "Hydro",
+            "Biomass",
+            "Geothermal"
+        ],
+
+        y=[
+            d1["Solar_GW"],
+            d1["Wind_GW"],
+            d1["Hydro_GW"],
+            d1["Biomass_GW"],
+            d1["Geothermal_GW"]
+        ],
+
+        color_discrete_sequence=["#43A047"],
+
+        labels={"x": "Energy Source", "y": "GW"},
+
+        title=f"{country1} vs {country2}"
+    )
+
+    compare.add_bar(
+
+        x=[
+            "Solar",
+            "Wind",
+            "Hydro",
+            "Biomass",
+            "Geothermal"
+        ],
+
+        y=[
+            d2["Solar_GW"],
+            d2["Wind_GW"],
+            d2["Hydro_GW"],
+            d2["Biomass_GW"],
+            d2["Geothermal_GW"]
+        ],
+
+        name=country2,
+
+        marker_color="#1976D2"
+
+    )
+
+    compare.update_layout(
+        template="plotly_white",
+        barmode="group",
+        height=550
+    )
+
+    st.plotly_chart(compare, use_container_width=True)
+
+    st.markdown("### 📊 Summary")
+
+    c1, c2 = st.columns(2)
+
+    with c1:
+        st.metric(
+            f"{country1} Total Capacity",
+            f"{d1['Total_GW']:.1f} GW"
+        )
+
+    with c2:
+        st.metric(
+            f"{country2} Total Capacity",
+            f"{d2['Total_GW']:.1f} GW"
+        )
+
+    if d1["Total_GW"] > d2["Total_GW"]:
+        winner = country1
+    else:
+        winner = country2
+
+    st.success(
+        f"🏆 {winner} has the higher renewable energy capacity in {year}."
+    )
+
+# ==========================================
 # 📊 TABLEAU ANALYTICS
 # ==========================================
 
@@ -726,6 +864,7 @@ Test your knowledge of renewable energy and see how green you are!
 
         if answer == q["answer"]:
             score += 1
+            st.progress(score/len(questions))
 
     if st.button("✅ Submit Quiz"):
 
@@ -815,7 +954,7 @@ Homes Powered: {homes:,}
 Cars Removed: {cars:,}
 
 Recommendation:
-Continue investing in renewable energy and sustainable infrastructure.
+{recommendation}
 
 Generated by Renewable Energy Awareness Chatbot
 """
@@ -839,11 +978,25 @@ Generated by Renewable Energy Awareness Chatbot
     story.append(Paragraph(f"Total Capacity: {row['Total_GW']:.1f} GW", styles["BodyText"]))
     
     story.append(Paragraph(f"Solar: {row['Solar_GW']:.1f} GW", styles["BodyText"]))
-    
     story.append(Paragraph(f"Wind: {row['Wind_GW']:.1f} GW", styles["BodyText"]))
-    
     story.append(Paragraph(f"Hydro: {row['Hydro_GW']:.1f} GW", styles["BodyText"]))
+    story.append(Paragraph(f"Biomass: {row['Biomass_GW']:.1f} GW", styles["BodyText"]))
+    story.append(Paragraph(f"Geothermal: {row['Geothermal_GW']:.1f} GW", styles["BodyText"]))
     
+    story.append(Paragraph(f"Population: {row['Population_M']:.0f} Million", styles["BodyText"]))
+    story.append(Paragraph(f"GDP: ${row['GDP_Billion_USD']:.0f} Billion", styles["BodyText"]))
+    
+    story.append(Paragraph(f"CO₂ Saved: {co2:,.0f} Tons", styles["BodyText"]))
+    story.append(Paragraph(f"Equivalent Trees: {trees:,}", styles["BodyText"]))
+    story.append(Paragraph(f"Homes Powered: {homes:,}", styles["BodyText"]))
+    story.append(Paragraph(f"Cars Removed: {cars:,}", styles["BodyText"]))
+
+    story.append(
+        Paragraph(
+            f"<b>AI Recommendation:</b> {recommendation}",
+            styles["BodyText"]
+        )
+    )
     doc.build(story)
     
     st.download_button(
