@@ -1,258 +1,310 @@
-# ==========================================
-# Renewable Energy Awareness Chatbot
-# Modern Streamlit UI (Starter Version)
-# ==========================================
-
 import streamlit as st
-import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from gtts import gTTS
-from io import BytesIO
-import base64
 
-st.set_page_config(page_title="Renewable Energy Awareness Chatbot",
-                   page_icon="🌿",
-                   layout="wide")
+from utils import load_data
+
+from pages.dashboard import show_dashboard
+from pages.chatbot import show_chatbot
+from pages.learn import show_learn
+from pages.compare import show_compare
+from pages.climate import show_climate
+from pages.quiz import show_quiz
+from pages.report import show_report
+from pages.tableau import show_tableau
+
+# ==========================================
+# PAGE CONFIGURATION
+# ==========================================
+
+st.set_page_config(
+    page_title="Renewable Energy Awareness Chatbot",
+    page_icon="🌿",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# ==========================================
+# CUSTOM CSS
+# ==========================================
 
 st.markdown("""
-<div style="padding:25px;border-radius:18px;
-background:linear-gradient(135deg,#2E7D32,#43A047,#81C784);
-color:white;text-align:center;">
-<h1>🌿 Renewable Energy Awareness Chatbot</h1>
-<h4>Learn • Explore • Compare • Act</h4>
-<p>AI-powered platform for renewable energy awareness and climate education.</p>
-</div>
-""", unsafe_allow_html=True)
+<style>
 
-st.markdown("""
-<div style="background:#F8FFF9;padding:15px;border-radius:15px;
-text-align:center;font-size:26px;">
-☀️ Solar &nbsp;&nbsp; 💨 Wind &nbsp;&nbsp; 💧 Hydro &nbsp;&nbsp;
-🌿 Biomass &nbsp;&nbsp; 🌋 Geothermal
-</div>
-""", unsafe_allow_html=True)
-
-with st.sidebar:
-    st.title("🌿 Renewable Energy Awareness Chatbot")
-    st.markdown("---")
-    st.markdown("""
-🏠 Dashboard
-
-💬 AI Chatbot
-
-📚 Learn
-
-🌍 Compare Countries
-
-📈 Trends
-
-🌱 Climate Impact
-""")
-    st.markdown("---")
-    st.success("SDG 7 • Affordable & Clean Energy")
-
-@st.cache_data
-def load_data():
-    df = pd.read_csv("renewables_enhanced_augmented.csv")
-    cols=["Solar_GW","Wind_GW","Hydro_GW","Biomass_GW","Geothermal_GW"]
-    df[cols]=df[cols].apply(pd.to_numeric)
-    df["Total_GW"]=df[cols].sum(axis=1)
-    return df
-
-df=load_data()
-
-country_flags={
-"India":"🇮🇳 India","USA":"🇺🇸 USA","China":"🇨🇳 China",
-"Germany":"🇩🇪 Germany","Brazil":"🇧🇷 Brazil",
-"Australia":"🇦🇺 Australia","UK":"🇬🇧 UK",
-"France":"🇫🇷 France","Canada":"🇨🇦 Canada",
-"South Africa":"🇿🇦 South Africa"
+.main{
+    background:#F8FFF9;
 }
 
-tab1,tab2,tab3=st.tabs(["📊 Dashboard","💬 Chatbot","📚 Learn"])
+.block-container{
+    padding-top:1rem;
+    padding-bottom:1rem;
+}
 
-with tab1:
+.metric-card{
+    background:white;
+    padding:18px;
+    border-radius:18px;
+    border:1px solid #D9EAD3;
+    box-shadow:0 4px 12px rgba(0,0,0,.08);
+}
 
-    c1,c2=st.columns([2,1])
+.energy-card{
+    padding:18px;
+    border-radius:16px;
+    color:white;
+    text-align:center;
+    font-weight:bold;
+}
 
-    with c1:
-        country=st.selectbox("🌍 Select Country",
-                             list(country_flags.keys()),
-                             format_func=lambda x:country_flags[x])
+.footer{
+    text-align:center;
+    color:#555;
+    padding:25px;
+}
 
-    with c2:
-        year=st.selectbox("📅 Year",
-                          sorted(df.Year.unique(),reverse=True))
+</style>
+""", unsafe_allow_html=True)
 
-    data=df[(df.Country==country)&(df.Year==year)].iloc[0]
+# ==========================================
+# LOAD DATA
+# ==========================================
 
-    k1,k2,k3,k4=st.columns(4)
+df = load_data()
 
-    k1.metric("⚡ Total Capacity",f"{data['Total_GW']:.1f} GW")
-    k2.metric("🌍 Population",f"{data['Population_M']:.0f} M")
-    k3.metric("💰 GDP",f"${data['GDP_Billion_USD']:.0f} B")
-    k4.metric("🌱 Green Score",
-              f"{min(100,round(data['Total_GW']/5))}/100")
+# ==========================================
+# COUNTRY FLAGS
+# ==========================================
 
-    energy=["Solar_GW","Wind_GW","Hydro_GW",
-            "Biomass_GW","Geothermal_GW"]
+flags = {
+    "India": "🇮🇳 India",
+    "USA": "🇺🇸 USA",
+    "China": "🇨🇳 China",
+    "Germany": "🇩🇪 Germany",
+    "Brazil": "🇧🇷 Brazil",
+    "Australia": "🇦🇺 Australia",
+    "UK": "🇬🇧 UK",
+    "France": "🇫🇷 France",
+    "Canada": "🇨🇦 Canada",
+    "South Africa": "🇿🇦 South Africa"
+}
 
-    labels=["Solar","Wind","Hydro","Biomass","Geothermal"]
+# ==========================================
+# SIDEBAR
+# ==========================================
 
-    colors=["#F9A826","#29B6F6","#1976D2",
-            "#66BB6A","#8D6E63"]
+with st.sidebar:
 
-    left,right=st.columns([1,1])
+    st.image(
+        "assets/renewable.png",
+        width=100
+    )
 
-    with left:
+    st.title("🌿 Renewable Energy Awareness Chatbot")
 
-        fig=go.Figure(go.Pie(
-            labels=labels,
-            values=data[energy],
-            hole=.55,
-            marker=dict(colors=colors)
-        ))
+    st.caption("Version 1.0")
 
-        fig.update_layout(
-            title="Renewable Energy Mix",
-            height=500)
+    st.markdown("---")
 
-        st.plotly_chart(fig,use_container_width=True)
+    page = st.radio(
 
-    with right:
+        "Navigation",
 
-        for emoji,col,color in zip(
-            ["☀️","💨","💧","🌿","🌋"],
-            energy,
-            colors):
+        [
 
-            st.markdown(f"""
-<div style="padding:12px;border-left:8px solid {color};
-background:white;border-radius:10px;
-margin-bottom:10px;">
-<h4>{emoji} {col.replace("_GW","")}</h4>
-<h2>{data[col]:.1f} GW</h2>
+            "🏠 Dashboard",
+
+            "💬 AI Chatbot",
+
+            "📚 Learn",
+
+            "🌍 Compare",
+
+            "📊 Tableau Analytics",
+
+            "🌱 Climate Impact",
+
+            "🎮 Green Quiz",
+
+            "📄 Report"
+
+        ]
+
+    )
+
+    st.markdown("---")
+
+    country = st.selectbox(
+
+        "🌍 Select Country",
+
+        list(flags.keys()),
+
+        format_func=lambda x: flags[x]
+
+    )
+
+    year = st.select_slider(
+
+        "📅 Select Year",
+
+        options=sorted(df["Year"].unique()),
+
+        value=max(df["Year"].unique())
+
+    )
+
+    st.markdown("---")
+
+    st.success("SDG 7 • Affordable & Clean Energy")
+
+# ==========================================
+# HERO BANNER
+# ==========================================
+
+st.markdown("""
+
+<div style="
+padding:35px;
+border-radius:24px;
+background:linear-gradient(135deg,#1B5E20,#43A047,#81C784);
+color:white;
+text-align:center;
+">
+
+<h1>🌿 Renewable Energy Awareness Chatbot</h1>
+
+<h3>
+AI-Powered Renewable Energy Dashboard
+</h3>
+
+<p>
+
+Learn • Explore • Compare • Act
+
+</p>
+
 </div>
-""",unsafe_allow_html=True)
 
-    trend=df[df.Country==country].sort_values("Year")
+""", unsafe_allow_html=True)
 
-    fig2=px.area(
-        trend,
-        x="Year",
-        y=["Solar_GW","Wind_GW","Hydro_GW"],
-        title=f"{country} Renewable Growth")
+# ==========================================
+# RENEWABLE ENERGY BANNER
+# ==========================================
 
-    st.plotly_chart(fig2,use_container_width=True)
+st.markdown("""
 
-    growth=((trend.iloc[-1]["Solar_GW"]-
-              trend.iloc[0]["Solar_GW"])
-              /trend.iloc[0]["Solar_GW"])*100
+<div style="
+background:#F8FFF9;
+padding:15px;
+border-radius:18px;
+text-align:center;
+font-size:28px;
+">
 
-    st.info(f"""
-🤖 AI Insight
+☀️ Solar
 
-• Solar capacity increased by **{growth:.1f}%**
+&nbsp;&nbsp;&nbsp;
 
-• Wind energy continues steady growth.
+💨 Wind
 
-• Hydropower remains stable.
+&nbsp;&nbsp;&nbsp;
 
-Recommendation:
-Increase investment in renewable infrastructure.
-""")
+💧 Hydro
 
-    st.subheader("🌱 Climate Impact")
+&nbsp;&nbsp;&nbsp;
 
-    a,b,c,d=st.columns(4)
+🌿 Biomass
 
-    co2=data["Total_GW"]*1200
-    trees=int(co2/21)
-    homes=int(data["Total_GW"]*500000)
-    cars=int(co2/4600)
+&nbsp;&nbsp;&nbsp;
 
-    a.metric("🌍 CO₂ Saved",f"{co2:,.0f} Tons")
-    b.metric("🌳 Trees",f"{trees:,}")
-    c.metric("🏠 Homes Powered",f"{homes:,}")
-    d.metric("🚗 Cars Removed",f"{cars:,}")
+🌋 Geothermal
 
-    mapfig=px.choropleth(
-        df[df.Year==year],
-        locations="Country",
-        locationmode="country names",
-        color="Total_GW",
-        hover_name="Country",
-        color_continuous_scale="Greens")
+</div>
 
-    st.plotly_chart(mapfig,use_container_width=True)
+""", unsafe_allow_html=True)
 
-with tab2:
+# ==========================================
+# FILTER DATA
+# ==========================================
 
-    st.subheader("💬 AI Renewable Assistant")
+filtered = df[
 
-    if "messages" not in st.session_state:
-        st.session_state.messages=[]
+    (df["Country"] == country)
 
-    for m in st.session_state.messages:
-        with st.chat_message(m["role"]):
-            st.write(m["content"])
+    &
 
-    q=st.chat_input("Ask about renewable energy...")
+    (df["Year"] == year)
 
-    if q:
-        with st.chat_message("user"):
-            st.write(q)
+]
 
-        response="Try asking about solar, wind, hydro, biomass, geothermal or total renewable capacity."
+if filtered.empty:
 
-        if "solar" in q.lower():
-            response=f"{country} has {data['Solar_GW']} GW of solar capacity."
-        elif "wind" in q.lower():
-            response=f"{country} has {data['Wind_GW']} GW of wind capacity."
-        elif "hydro" in q.lower():
-            response=f"{country} has {data['Hydro_GW']} GW of hydropower."
-        elif "total" in q.lower():
-            response=f"Total renewable capacity is {data['Total_GW']:.1f} GW."
+    st.error("No data available.")
 
-        st.session_state.messages.append({"role":"user","content":q})
-        st.session_state.messages.append({"role":"assistant","content":response})
+    st.stop()
 
-        with st.chat_message("assistant"):
-            st.write(response)
+row = filtered.iloc[0]
 
-            tts=gTTS(response)
-            mp3=BytesIO()
-            tts.write_to_fp(mp3)
-            mp3.seek(0)
-            b64=base64.b64encode(mp3.read()).decode()
-            st.audio(f"data:audio/mp3;base64,{b64}")
+# ==========================================
+# CLIMATE IMPACT CALCULATIONS
+# ==========================================
 
-with tab3:
+co2 = row["Total_GW"] * 1200
 
-    st.subheader("📚 Renewable Energy Explorer")
+trees = int(co2 / 21)
 
-    topic=st.radio(
-        "Choose a topic",
-        ["☀️ Solar","💨 Wind","💧 Hydro","🌿 Biomass","🌋 Geothermal"],
-        horizontal=True)
+homes = int(row["Total_GW"] * 500000)
 
-    with st.expander("Learn More",expanded=True):
+cars = int(co2 / 4600)
 
-        if "Solar" in topic:
-            st.write("☀️ Converts sunlight into electricity.")
-            st.success("Advantages: Clean, abundant, low maintenance.")
-            st.warning("Disadvantages: Weather dependent.")
-        elif "Wind" in topic:
-            st.write("💨 Generates electricity using wind turbines.")
-        elif "Hydro" in topic:
-            st.write("💧 Uses flowing water to generate electricity.")
-        elif "Biomass" in topic:
-            st.write("🌿 Uses organic matter as fuel.")
-        else:
-            st.write("🌋 Uses Earth's internal heat.")
+# ==========================================
+# AI RECOMMENDATION
+# ==========================================
+
+if row["Solar_GW"] > row["Wind_GW"]:
+
+    recommendation = (
+
+        "Expand solar farms and rooftop solar installations."
+
+    )
+
+elif row["Wind_GW"] > row["Solar_GW"]:
+
+    recommendation = (
+
+        "Increase investments in wind farms and modern turbine technology."
+
+    )
+
+else:
+
+    recommendation = (
+
+        "Maintain a balanced renewable energy portfolio."
+
+    )
+
+C
+
+# ==========================================
+# FOOTER
+# ==========================================
 
 st.markdown("---")
+
 st.markdown(
-"<center><b>❤️ Built for the 1M1B Green Internship | SDG 7 • Affordable & Clean Energy</b></center>",
-unsafe_allow_html=True)
+    """
+<div class="footer">
+
+<h3>❤️ Built for the 1M1B Green Internship</h3>
+
+<p>
+Promoting
+<b>SDG 7 • Affordable & Clean Energy</b>
+</p>
+
+</div>
+""",
+    unsafe_allow_html=True,
+)
