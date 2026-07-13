@@ -87,7 +87,6 @@ with st.sidebar:
         "through interactive visualizations, a chatbot, climate impact estimates, "
         "and learning resources."
     )
-    st.markdown("---")
 
 st.markdown("""
 <div style="
