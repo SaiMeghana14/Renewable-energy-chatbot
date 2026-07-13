@@ -88,8 +88,6 @@ with st.sidebar:
         "and learning resources."
     )
     st.markdown("---")
-    st.caption("Version 1.0")
-    st.caption("Built for the 1M1B Green Internship")
 
 st.markdown("""
 <div style="
