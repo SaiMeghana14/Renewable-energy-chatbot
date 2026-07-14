@@ -130,7 +130,8 @@ def load():
     df["Total_GW"]=df[energy_cols].sum(axis=1)
     return df
 
-df=load()
+with st.spinner("🌿 Loading Renewable Energy Dashboard..."):
+    df = load()
 
 flags={
 "India":"🇮🇳 India","USA":"🇺🇸 USA","China":"🇨🇳 China","Germany":"🇩🇪 Germany",
@@ -204,12 +205,29 @@ if page=="🏠 Dashboard":
 
     col1,col2,col3,col4=st.columns(4)
 
-    cards=[
-    ("⚡","Total Capacity",f"{row.Total_GW:.1f} GW","#2E7D32"),
-    ("🌍","Population",f"{row.Population_M:.0f} M","#1976D2"),
-    ("💰","GDP",f"${row.GDP_Billion_USD:.0f} B","#F9A826"),
-    ("🌱","Green Score",f"{min(100,round(row.Total_GW/5))}/100","#43A047")
-    ]
+    col1.metric(
+        "⚡ Total Capacity",
+        f"{row['Total_GW']:.1f} GW",
+        "+5.4%"
+    )
+    
+    col2.metric(
+        "🌍 Population",
+        f"{row['Population_M']:.0f} M",
+        "+1.2%"
+    )
+    
+    col3.metric(
+        "💰 GDP",
+        f"${row['GDP_Billion_USD']:.0f} B",
+        "+3.8%"
+    )
+    
+    col4.metric(
+        "🌱 Green Score",
+        f"{min(100,round(row['Total_GW']/5))}/100",
+        "+4%"
+    )
     
     for col,(icon,title,value,color) in zip([col1,col2,col3,col4],cards):
     
@@ -232,6 +250,14 @@ if page=="🏠 Dashboard":
             pull=[0.04,0,0,0,0],
             marker=dict(colors=["#F9A826","#29B6F6","#1976D2","#66BB6A","#8D6E63"])
         ))
+
+        fig.update_traces(
+        hovertemplate=       
+        "<b>%{label}</b><br>"       
+        "Capacity: %{value} GW"     
+        "<extra></extra>"
+        )
+        
         fig.update_layout(
         title="Renewable Energy Mix",        
         template="plotly_white", 
@@ -284,6 +310,13 @@ if page=="🏠 Dashboard":
     plot_bgcolor="#F8FFF9"   
     )
     st.plotly_chart(fig2,use_container_width=True)
+
+    st.download_button(
+        "📥 Download Dataset",
+        filtered.to_csv(index=False),
+        "renewable_data.csv",
+        "text/csv"
+    )
 
     growth=(trend.iloc[-1].Solar_GW-trend.iloc[0].Solar_GW)/trend.iloc[0].Solar_GW*100
     
@@ -363,20 +396,35 @@ elif page == "💬 AI Chatbot":
     """, unsafe_allow_html=True)
 
     st.markdown("## ⚡ Quick Questions")
-
-    c1,c2,c3 = st.columns(3)
+    st.caption("Click a button to instantly ask the AI assistant.")
     
-    with c1:
-        if st.button("☀️ Solar Capacity"):
-            st.session_state.quick_question = "solar"
+    # Clear Chat Button
+    top_left, top_right = st.columns([6, 1])
     
-    with c2:
-        if st.button("💨 Wind Capacity"):
-            st.session_state.quick_question = "wind"
+    with top_right:
+        if st.button("🗑 Clear Chat", use_container_width=True):
+            st.session_state.messages = []
+            st.rerun()
     
-    with c3:
-        if st.button("⚡ Total Capacity"):
-            st.session_state.quick_question = "total"
+    # Quick Question Buttons
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        if st.button("☀️ Solar", use_container_width=True):
+            st.session_state.quick_question = "What is the solar capacity?"
+    
+    with col2:
+        if st.button("💨 Wind", use_container_width=True):
+            st.session_state.quick_question = "What is the wind capacity?"
+    
+    with col3:
+        if st.button("🌍 GDP", use_container_width=True):
+            st.session_state.quick_question = "What is the GDP?"
+    
+    with col4:
+        if st.button("⚡ Total", use_container_width=True):
+            st.session_state.quick_question = "What is the total renewable capacity?"
+            
 
     st.markdown("## 🌿 What can I help you with?")
 
@@ -433,6 +481,10 @@ elif page == "💬 AI Chatbot":
 
     # Chat Input
     q = st.chat_input("Ask about renewable energy...")
+
+    # Use quick question if selected
+    if "quick_question" in st.session_state:
+        q = st.session_state.pop("quick_question")
 
     if q:
 
@@ -559,6 +611,11 @@ elif page=="📚 Learn":
     if "Solar" in topic:
         st.image("assets/solar.png",use_container_width=True)
         st.success("Solar energy converts sunlight into electricity using photovoltaic cells.")
+        st.info("""
+        💡 Did You Know?
+        
+        The Sun provides more energy to Earth in one hour than humanity uses in an entire year.
+        """)
 
         col1,col2=st.columns(2)
 
@@ -596,6 +653,11 @@ elif page=="📚 Learn":
 
         st.image("assets/wind.png",use_container_width=True)
         st.success("Wind turbines convert wind energy into electricity.")
+        st.info("""
+        💡 Did You Know?
+        
+        Modern offshore wind turbines can power thousands of homes.
+        """)
 
         col1,col2=st.columns(2)
 
@@ -631,6 +693,11 @@ elif page=="📚 Learn":
 
         st.image("assets/hydro.png",use_container_width=True)
         st.success("Hydropower generates electricity from flowing water.")
+        st.info("""
+        💡 Did You Know?
+        
+        Hydropower supplies around 16% of the world's electricity.
+        """)
 
         st.markdown("""
 ### ✅ Advantages
@@ -656,6 +723,11 @@ elif page=="📚 Learn":
 
         st.image("assets/biomass.png",use_container_width=True)
         st.success("Biomass uses organic materials like crop waste and wood.")
+        st.info("""
+        💡 Did You Know?
+        
+        Agricultural waste can be converted into clean electricity.
+        """)
 
         st.markdown("""
 ### ✅ Advantages
@@ -680,6 +752,11 @@ elif page=="📚 Learn":
 
         st.image("assets/geothermal.png",use_container_width=True)
         st.success("Geothermal energy comes from heat inside the Earth.")
+        st.info("""
+        💡 Did You Know?
+        
+        Geothermal plants can generate electricity 24 hours a day.
+        """)
 
         st.markdown("""
 ### ✅ Advantages
@@ -814,9 +891,19 @@ elif page == "🌍 Compare":
     else:
         winner = country2
 
-    st.success(
-        f"🏆 {winner} has the higher renewable energy capacity in {year}."
-    )
+    st.markdown(f"""
+    <div class="metric-card">
+    
+    <h2>🏆 Winner</h2>
+    
+    <h1>{winner}</h1>
+    
+    <h3>Total Capacity</h3>
+    
+    <h2>{max(d1['Total_GW'],d2['Total_GW']):.1f} GW</h2>
+    
+    </div>
+    """,unsafe_allow_html=True)
 
 # ==========================================
 # 📊 TABLEAU ANALYTICS
@@ -838,6 +925,10 @@ an interactive Tableau dashboard.
         scrolling=True
     )
     
+# ==========================================
+# 🌱 CLIMATE IMPACT
+# ==========================================
+
 elif page == "🌱 Climate Impact":
 
     st.title("🌱 Climate Impact Calculator")
@@ -946,6 +1037,12 @@ Test your knowledge of renewable energy and see how green you are!
     if st.button("✅ Submit Quiz"):
 
         st.success(f"Your Score: {score} / {len(questions)}")
+        stars="⭐"*score+"☆"*(5-score)
+        st.markdown(f"""
+        ## {stars}
+        ### Eco Score
+        # {score}/5
+        """)
         percentage = score / len(questions) * 100
         st.progress(percentage / 100)
 
@@ -1082,8 +1179,16 @@ Generated by Renewable Energy Awareness Chatbot
 st.markdown("---")
 st.markdown("""
 <div class="footer">
-<h3>❤️ Built for the 1M1B Green Internship</h3>
-Promoting
-<b>SDG 7 - Affordable & Clean Energy</b>
+st.markdown("""
+<div class="footer">
+
+<h2>🌍 Renewable Energy Awareness Chatbot</h2>
+
+Built with ❤️ for the <b>1M1B Green Internship</b>
+
+<br>
+
+Supporting <b>SDG 7 – Affordable & Clean Energy</b>
+
 </div>
 """,unsafe_allow_html=True)
