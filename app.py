@@ -114,7 +114,7 @@ unsafe_allow_html=True)
 
 @st.cache_data
 def load():
-    df = pd.read_csv("renewables_enhanced_augmented.csv")
+    df = pd.read_csv("data/renewables_enhanced_augmented.csv")
     energy_cols=[
     "Solar_GW",
     "Wind_GW",
